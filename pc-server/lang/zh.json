@@ -1,0 +1,72 @@
+{
+    "app_title": "VoiceMic 服务器",
+    "status_disconnected": "已断开",
+    "status_connecting": "连接中...",
+    "status_connected": "已连接到 {device}",
+    "status_streaming": "正在传输",
+    "status_waiting": "等待连接...",
+    "status_error": "错误：{error}",
+
+    "btn_start": "启动服务器",
+    "btn_stop": "停止服务器",
+    "btn_connect": "连接",
+    "btn_disconnect": "断开",
+
+    "label_server_status": "服务器状态",
+    "label_connection": "连接",
+    "label_audio": "音频",
+    "label_settings": "设置",
+    "label_log": "日志",
+    "label_about": "关于",
+
+    "label_port": "端口",
+    "label_ip_address": "IP 地址",
+    "label_sample_rate": "采样率",
+    "label_channels": "声道",
+    "label_codec": "编解码器",
+    "label_volume": "音量",
+    "label_output_device": "输出设备",
+    "label_connection_mode": "连接模式",
+    "label_latency": "延迟",
+    "label_audio_level": "音频电平",
+    "label_device": "设备",
+    "label_language": "语言",
+
+    "mode_wifi": "Wi-Fi",
+    "mode_usb": "USB",
+    "mode_bluetooth": "蓝牙",
+
+    "codec_pcm": "PCM（无压缩）",
+    "codec_opus": "Opus（压缩）",
+
+    "channels_mono": "单声道",
+    "channels_stereo": "立体声",
+
+    "settings_noise_suppression": "噪音抑制",
+    "settings_auto_start": "自动启动服务器",
+    "settings_minimize_tray": "最小化到系统托盘",
+    "settings_dark_theme": "深色主题",
+    "settings_virtual_mic": "虚拟麦克风",
+    "settings_virtual_mic_desc": "将音频路由到 VoiceMic 虚拟麦克风驱动",
+    "settings_keep_on_top": "窗口置顶",
+
+    "log_server_started": "服务器已在端口 {port} 启动",
+    "log_server_stopped": "服务器已停止",
+    "log_client_connected": "客户端已连接：{device}（{ip}）",
+    "log_client_disconnected": "客户端已断开",
+    "log_driver_active": "虚拟麦克风驱动已激活",
+    "log_driver_not_found": "未找到虚拟麦克风驱动 - 使用音频播放",
+    "log_ns_on": "噪音抑制：开启",
+    "log_ns_off": "噪音抑制：关闭",
+
+    "about_version": "版本 {version}",
+    "about_description": "虚拟麦克风应用。\n将手机音频传输到电脑。",
+
+    "error_port_in_use": "端口 {port} 已被占用",
+    "error_no_audio_device": "未找到音频输出设备",
+    "error_driver_install": "虚拟麦克风驱动未安装。\n请通过 VoiceMic 安装程序安装。",
+
+    "tooltip_volume": "调节音量（0-200%）",
+    "tooltip_start": "启动 VoiceMic 服务器",
+    "tooltip_stop": "停止服务器并断开客户端"
+}

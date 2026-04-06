@@ -1,0 +1,99 @@
+;
+; VoiceMic Virtual Audio Device Driver
+; INF file for installing the virtual microphone capture device
+;
+
+[Version]
+Signature   = "$CHICAGO$"
+Class       = MEDIA
+ClassGuid   = {4d36e96c-e325-11ce-bfc1-08002be10318}
+Provider    = %ProviderName%
+CatalogFile = voicemic_audio.cat
+DriverVer   = 01/01/2024,1.0.0.0
+PnpLockdown = 1
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+voicemic_audio.sys = 1
+
+[DestinationDirs]
+DefaultDestDir       = 13
+VoiceMic.CopyFiles   = 13
+
+[Manufacturer]
+%MfgName% = VoiceMicDevices,NTamd64
+
+[VoiceMicDevices.NTamd64]
+%DeviceName% = VoiceMic.Install, Root\VoiceMicAudio
+
+; ── Install Section ──
+
+[VoiceMic.Install]
+Include    = ks.inf, wdmaudio.inf
+Needs      = KS.Registration, WDMAUDIO.Registration
+CopyFiles  = VoiceMic.CopyFiles
+AddReg     = VoiceMic.AddReg
+
+[VoiceMic.Install.Interfaces]
+AddInterface = %KSCATEGORY_AUDIO%,    %KSNAME_Wave%, VoiceMic.Interface.Wave
+AddInterface = %KSCATEGORY_CAPTURE%,  %KSNAME_Wave%, VoiceMic.Interface.Wave
+AddInterface = %KSCATEGORY_AUDIO%,    %KSNAME_Topology%, VoiceMic.Interface.Topology
+
+[VoiceMic.Interface.Wave]
+AddReg = VoiceMic.Interface.Wave.AddReg
+
+[VoiceMic.Interface.Wave.AddReg]
+HKR,,FriendlyName,,%WaveName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[VoiceMic.Interface.Topology]
+AddReg = VoiceMic.Interface.Topology.AddReg
+
+[VoiceMic.Interface.Topology.AddReg]
+HKR,,FriendlyName,,%TopologyName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[VoiceMic.CopyFiles]
+voicemic_audio.sys
+
+[VoiceMic.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,swmidi,redbook"
+HKR,,Driver,,voicemic_audio.sys
+HKR,Drivers,SubClasses,,"wave,mixer"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\wave\wdmaud.drv,Description,,%DeviceName%
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Description,,%DeviceName%
+
+; ── Service ──
+
+[VoiceMic.Install.Services]
+AddService = VoiceMicAudio, 0x00000002, VoiceMic.ServiceInstall
+
+[VoiceMic.ServiceInstall]
+DisplayName   = %ServiceName%
+ServiceType   = 1                  ; SERVICE_KERNEL_DRIVER
+StartType     = 3                  ; SERVICE_DEMAND_START
+ErrorControl  = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary = %13%\voicemic_audio.sys
+
+; ── Strings ──
+
+[Strings]
+ProviderName  = "VoiceMic Project"
+MfgName       = "VoiceMic"
+DeviceName    = "VoiceMic Virtual Microphone"
+ServiceName   = "VoiceMic Virtual Audio"
+DiskName      = "VoiceMic Virtual Audio Driver Disk"
+WaveName      = "VoiceMic Virtual Microphone"
+TopologyName  = "VoiceMic Mixer"
+
+KSNAME_Wave     = "Wave"
+KSNAME_Topology = "Topology"
+
+Proxy.CLSID          = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO     = "{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_CAPTURE   = "{65E8773D-8F56-11D0-A3B9-00A0C9223196}"

@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.spec.bak
+venv/
+.env
+
+# PyInstaller
+pc-server/dist/
+pc-server/build/
+
+# Android
+android-client/.gradle/
+android-client/build/
+android-client/app/build/
+android-client/local.properties
+android-client/.idea/
+*.iml
+*.apk
+*.aab
+
+# Driver build
+driver/build/
+driver/x64/
+driver/Debug/
+driver/Release/
+driver/*.sys
+driver/*.cat
+
+# Installer output
+installer/Output/
+assets/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

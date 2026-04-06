@@ -1,0 +1,72 @@
+{
+    "app_title": "VoiceMic Сервер",
+    "status_disconnected": "Від'єднано",
+    "status_connecting": "Підключення...",
+    "status_connected": "Підключено до {device}",
+    "status_streaming": "Трансляція",
+    "status_waiting": "Очікування підключення...",
+    "status_error": "Помилка: {error}",
+
+    "btn_start": "Запустити сервер",
+    "btn_stop": "Зупинити сервер",
+    "btn_connect": "Підключити",
+    "btn_disconnect": "Від'єднати",
+
+    "label_server_status": "Статус сервера",
+    "label_connection": "Підключення",
+    "label_audio": "Аудіо",
+    "label_settings": "Налаштування",
+    "label_log": "Журнал",
+    "label_about": "Про програму",
+
+    "label_port": "Порт",
+    "label_ip_address": "IP адреса",
+    "label_sample_rate": "Частота дискретизації",
+    "label_channels": "Канали",
+    "label_codec": "Кодек",
+    "label_volume": "Гучність",
+    "label_output_device": "Пристрій виводу",
+    "label_connection_mode": "Режим підключення",
+    "label_latency": "Затримка",
+    "label_audio_level": "Рівень звуку",
+    "label_device": "Пристрій",
+    "label_language": "Мова",
+
+    "mode_wifi": "Wi-Fi",
+    "mode_usb": "USB",
+    "mode_bluetooth": "Bluetooth",
+
+    "codec_pcm": "PCM (без стиснення)",
+    "codec_opus": "Opus (стиснення)",
+
+    "channels_mono": "Моно",
+    "channels_stereo": "Стерео",
+
+    "settings_noise_suppression": "Придушення шуму",
+    "settings_auto_start": "Автозапуск сервера",
+    "settings_minimize_tray": "Згортати в трей",
+    "settings_dark_theme": "Темна тема",
+    "settings_virtual_mic": "Віртуальний мікрофон",
+    "settings_virtual_mic_desc": "Направити звук на віртуальний мікрофон VoiceMic",
+    "settings_keep_on_top": "Поверх усіх вікон",
+
+    "log_server_started": "Сервер запущено на порту {port}",
+    "log_server_stopped": "Сервер зупинено",
+    "log_client_connected": "Клієнт підключений: {device} ({ip})",
+    "log_client_disconnected": "Клієнт від'єднаний",
+    "log_driver_active": "Драйвер віртуального мікрофона активний",
+    "log_driver_not_found": "Драйвер віртуального мікрофона не знайдено — використовується відтворення",
+    "log_ns_on": "Придушення шуму: УВІМК",
+    "log_ns_off": "Придушення шуму: ВИМК",
+
+    "about_version": "Версія {version}",
+    "about_description": "Застосунок віртуального мікрофона.\nТрансляція звуку з телефону на ПК.",
+
+    "error_port_in_use": "Порт {port} вже використовується",
+    "error_no_audio_device": "Аудіопристрій не знайдено",
+    "error_driver_install": "Драйвер віртуального мікрофона не встановлено.\nВстановіть через VoiceMic Setup.",
+
+    "tooltip_volume": "Гучність (0-200%)",
+    "tooltip_start": "Запустити сервер VoiceMic",
+    "tooltip_stop": "Зупинити сервер та від'єднати клієнта"
+}

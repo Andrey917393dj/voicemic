@@ -1,0 +1,72 @@
+{
+    "app_title": "VoiceMic Server",
+    "status_disconnected": "Disconnected",
+    "status_connecting": "Connecting...",
+    "status_connected": "Connected to {device}",
+    "status_streaming": "Streaming",
+    "status_waiting": "Waiting for connection...",
+    "status_error": "Error: {error}",
+
+    "btn_start": "Start Server",
+    "btn_stop": "Stop Server",
+    "btn_connect": "Connect",
+    "btn_disconnect": "Disconnect",
+
+    "label_server_status": "Server Status",
+    "label_connection": "Connection",
+    "label_audio": "Audio",
+    "label_settings": "Settings",
+    "label_log": "Log",
+    "label_about": "About",
+
+    "label_port": "Port",
+    "label_ip_address": "IP Address",
+    "label_sample_rate": "Sample Rate",
+    "label_channels": "Channels",
+    "label_codec": "Codec",
+    "label_volume": "Volume",
+    "label_output_device": "Output Device",
+    "label_connection_mode": "Connection Mode",
+    "label_latency": "Latency",
+    "label_audio_level": "Audio Level",
+    "label_device": "Device",
+    "label_language": "Language",
+
+    "mode_wifi": "Wi-Fi",
+    "mode_usb": "USB",
+    "mode_bluetooth": "Bluetooth",
+
+    "codec_pcm": "PCM (Uncompressed)",
+    "codec_opus": "Opus (Compressed)",
+
+    "channels_mono": "Mono",
+    "channels_stereo": "Stereo",
+
+    "settings_noise_suppression": "Noise Suppression",
+    "settings_auto_start": "Auto-start server",
+    "settings_minimize_tray": "Minimize to system tray",
+    "settings_dark_theme": "Dark Theme",
+    "settings_virtual_mic": "Virtual Microphone",
+    "settings_virtual_mic_desc": "Route audio to VoiceMic virtual microphone driver",
+    "settings_keep_on_top": "Always on top",
+
+    "log_server_started": "Server started on port {port}",
+    "log_server_stopped": "Server stopped",
+    "log_client_connected": "Client connected: {device} ({ip})",
+    "log_client_disconnected": "Client disconnected",
+    "log_driver_active": "Virtual microphone driver active",
+    "log_driver_not_found": "Virtual microphone driver not found — using audio playback",
+    "log_ns_on": "Noise suppression: ON",
+    "log_ns_off": "Noise suppression: OFF",
+
+    "about_version": "Version {version}",
+    "about_description": "Virtual microphone application.\nStream audio from your phone to your PC.",
+
+    "error_port_in_use": "Port {port} is already in use",
+    "error_no_audio_device": "No audio output device found",
+    "error_driver_install": "Virtual microphone driver not installed.\nInstall using the VoiceMic Setup.",
+
+    "tooltip_volume": "Adjust output volume (0-200%)",
+    "tooltip_start": "Start the VoiceMic server",
+    "tooltip_stop": "Stop the server and disconnect client"
+}

@@ -1,0 +1,72 @@
+{
+    "app_title": "VoiceMic Serveur",
+    "status_disconnected": "Déconnecté",
+    "status_connecting": "Connexion en cours...",
+    "status_connected": "Connecté à {device}",
+    "status_streaming": "Diffusion",
+    "status_waiting": "En attente de connexion...",
+    "status_error": "Erreur : {error}",
+
+    "btn_start": "Démarrer le serveur",
+    "btn_stop": "Arrêter le serveur",
+    "btn_connect": "Connecter",
+    "btn_disconnect": "Déconnecter",
+
+    "label_server_status": "État du serveur",
+    "label_connection": "Connexion",
+    "label_audio": "Audio",
+    "label_settings": "Paramètres",
+    "label_log": "Journal",
+    "label_about": "À propos",
+
+    "label_port": "Port",
+    "label_ip_address": "Adresse IP",
+    "label_sample_rate": "Fréquence d'échantillonnage",
+    "label_channels": "Canaux",
+    "label_codec": "Codec",
+    "label_volume": "Volume",
+    "label_output_device": "Périphérique de sortie",
+    "label_connection_mode": "Mode de connexion",
+    "label_latency": "Latence",
+    "label_audio_level": "Niveau audio",
+    "label_device": "Appareil",
+    "label_language": "Langue",
+
+    "mode_wifi": "Wi-Fi",
+    "mode_usb": "USB",
+    "mode_bluetooth": "Bluetooth",
+
+    "codec_pcm": "PCM (non compressé)",
+    "codec_opus": "Opus (compressé)",
+
+    "channels_mono": "Mono",
+    "channels_stereo": "Stéréo",
+
+    "settings_noise_suppression": "Suppression du bruit",
+    "settings_auto_start": "Démarrage automatique",
+    "settings_minimize_tray": "Réduire dans la barre système",
+    "settings_dark_theme": "Thème sombre",
+    "settings_virtual_mic": "Microphone virtuel",
+    "settings_virtual_mic_desc": "Acheminer l'audio vers le microphone virtuel VoiceMic",
+    "settings_keep_on_top": "Toujours au premier plan",
+
+    "log_server_started": "Serveur démarré sur le port {port}",
+    "log_server_stopped": "Serveur arrêté",
+    "log_client_connected": "Client connecté : {device} ({ip})",
+    "log_client_disconnected": "Client déconnecté",
+    "log_driver_active": "Pilote de microphone virtuel actif",
+    "log_driver_not_found": "Pilote de microphone virtuel introuvable — lecture audio utilisée",
+    "log_ns_on": "Suppression du bruit : ACTIVÉE",
+    "log_ns_off": "Suppression du bruit : DÉSACTIVÉE",
+
+    "about_version": "Version {version}",
+    "about_description": "Application de microphone virtuel.\nDiffusez l'audio de votre téléphone vers votre PC.",
+
+    "error_port_in_use": "Le port {port} est déjà utilisé",
+    "error_no_audio_device": "Aucun périphérique audio trouvé",
+    "error_driver_install": "Pilote de microphone virtuel non installé.\nInstallez via VoiceMic Setup.",
+
+    "tooltip_volume": "Régler le volume (0-200%)",
+    "tooltip_start": "Démarrer le serveur VoiceMic",
+    "tooltip_stop": "Arrêter le serveur et déconnecter"
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VoiceMic</string>
+    <string name="settings">Settings</string>
+    <string name="action_settings">Settings</string>
+
+    <string-array name="sample_rate_entries">
+        <item>8 kHz (Low)</item>
+        <item>16 kHz (Medium)</item>
+        <item>22.05 kHz</item>
+        <item>44.1 kHz (CD)</item>
+        <item>48 kHz (Best)</item>
+    </string-array>
+    <string-array name="sample_rate_values">
+        <item>8000</item>
+        <item>16000</item>
+        <item>22050</item>
+        <item>44100</item>
+        <item>48000</item>
+    </string-array>
+
+    <string-array name="codec_entries">
+        <item>PCM (Uncompressed)</item>
+        <item>Opus (Compressed)</item>
+    </string-array>
+    <string-array name="codec_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
+    <string-array name="connection_mode_entries">
+        <item>WiFi</item>
+        <item>USB (ADB)</item>
+    </string-array>
+    <string-array name="connection_mode_values">
+        <item>wifi</item>
+        <item>usb</item>
+    </string-array>
+
+    <string-array name="buffer_entries">
+        <item>1024 (Low latency)</item>
+        <item>2048</item>
+        <item>4096 (Default)</item>
+        <item>8192 (Stable)</item>
+    </string-array>
+    <string-array name="buffer_values">
+        <item>1024</item>
+        <item>2048</item>
+        <item>4096</item>
+        <item>8192</item>
+    </string-array>
+</resources>

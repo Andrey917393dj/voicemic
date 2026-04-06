@@ -1,0 +1,72 @@
+{
+    "app_title": "VoiceMic Server",
+    "status_disconnected": "Getrennt",
+    "status_connecting": "Verbindung wird hergestellt...",
+    "status_connected": "Verbunden mit {device}",
+    "status_streaming": "Streaming",
+    "status_waiting": "Warten auf Verbindung...",
+    "status_error": "Fehler: {error}",
+
+    "btn_start": "Server starten",
+    "btn_stop": "Server stoppen",
+    "btn_connect": "Verbinden",
+    "btn_disconnect": "Trennen",
+
+    "label_server_status": "Serverstatus",
+    "label_connection": "Verbindung",
+    "label_audio": "Audio",
+    "label_settings": "Einstellungen",
+    "label_log": "Protokoll",
+    "label_about": "Über",
+
+    "label_port": "Port",
+    "label_ip_address": "IP-Adresse",
+    "label_sample_rate": "Abtastrate",
+    "label_channels": "Kanäle",
+    "label_codec": "Codec",
+    "label_volume": "Lautstärke",
+    "label_output_device": "Ausgabegerät",
+    "label_connection_mode": "Verbindungsmodus",
+    "label_latency": "Latenz",
+    "label_audio_level": "Audiopegel",
+    "label_device": "Gerät",
+    "label_language": "Sprache",
+
+    "mode_wifi": "WLAN",
+    "mode_usb": "USB",
+    "mode_bluetooth": "Bluetooth",
+
+    "codec_pcm": "PCM (unkomprimiert)",
+    "codec_opus": "Opus (komprimiert)",
+
+    "channels_mono": "Mono",
+    "channels_stereo": "Stereo",
+
+    "settings_noise_suppression": "Rauschunterdrückung",
+    "settings_auto_start": "Server automatisch starten",
+    "settings_minimize_tray": "In Taskleiste minimieren",
+    "settings_dark_theme": "Dunkles Design",
+    "settings_virtual_mic": "Virtuelles Mikrofon",
+    "settings_virtual_mic_desc": "Audio an VoiceMic virtuelles Mikrofon weiterleiten",
+    "settings_keep_on_top": "Immer im Vordergrund",
+
+    "log_server_started": "Server gestartet auf Port {port}",
+    "log_server_stopped": "Server gestoppt",
+    "log_client_connected": "Client verbunden: {device} ({ip})",
+    "log_client_disconnected": "Client getrennt",
+    "log_driver_active": "Virtueller Mikrofontreiber aktiv",
+    "log_driver_not_found": "Virtueller Mikrofontreiber nicht gefunden — Audiowiedergabe wird verwendet",
+    "log_ns_on": "Rauschunterdrückung: EIN",
+    "log_ns_off": "Rauschunterdrückung: AUS",
+
+    "about_version": "Version {version}",
+    "about_description": "Virtuelles Mikrofon-Anwendung.\nAudio von Ihrem Telefon auf Ihren PC streamen.",
+
+    "error_port_in_use": "Port {port} wird bereits verwendet",
+    "error_no_audio_device": "Kein Audioausgabegerät gefunden",
+    "error_driver_install": "Virtueller Mikrofontreiber nicht installiert.\nInstallieren Sie über VoiceMic Setup.",
+
+    "tooltip_volume": "Lautstärke anpassen (0-200%)",
+    "tooltip_start": "VoiceMic Server starten",
+    "tooltip_stop": "Server stoppen und Client trennen"
+}

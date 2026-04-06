@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="Audio">
+
+        <ListPreference
+            android:key="sample_rate"
+            android:title="Sample Rate"
+            android:summary="Audio sample rate (higher = better quality)"
+            android:defaultValue="48000"
+            android:entries="@array/sample_rate_entries"
+            android:entryValues="@array/sample_rate_values" />
+
+        <ListPreference
+            android:key="codec"
+            android:title="Codec"
+            android:summary="Audio codec for streaming"
+            android:defaultValue="0"
+            android:entries="@array/codec_entries"
+            android:entryValues="@array/codec_values" />
+
+        <SwitchPreferenceCompat
+            android:key="stereo"
+            android:title="Stereo"
+            android:summary="Record in stereo (if supported by device)"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Connection">
+
+        <ListPreference
+            android:key="connection_mode"
+            android:title="Connection Mode"
+            android:summary="How to connect to the PC"
+            android:defaultValue="wifi"
+            android:entries="@array/connection_mode_entries"
+            android:entryValues="@array/connection_mode_values" />
+
+        <SwitchPreferenceCompat
+            android:key="auto_connect"
+            android:title="Auto-Connect"
+            android:summary="Automatically connect on app start"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Advanced">
+
+        <ListPreference
+            android:key="buffer_size"
+            android:title="Buffer Size"
+            android:summary="Lower = less latency, higher = more stable"
+            android:defaultValue="4096"
+            android:entries="@array/buffer_entries"
+            android:entryValues="@array/buffer_values" />
+
+        <SwitchPreferenceCompat
+            android:key="noise_suppression"
+            android:title="Noise Suppression"
+            android:summary="Reduce background noise"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="keep_screen_on"
+            android:title="Keep Screen On"
+            android:summary="Prevent screen from turning off while streaming"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

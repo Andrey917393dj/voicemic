@@ -1,0 +1,72 @@
+{
+    "app_title": "VoiceMic サーバー",
+    "status_disconnected": "切断済み",
+    "status_connecting": "接続中...",
+    "status_connected": "{device} に接続済み",
+    "status_streaming": "ストリーミング中",
+    "status_waiting": "接続待ち...",
+    "status_error": "エラー：{error}",
+
+    "btn_start": "サーバー開始",
+    "btn_stop": "サーバー停止",
+    "btn_connect": "接続",
+    "btn_disconnect": "切断",
+
+    "label_server_status": "サーバー状態",
+    "label_connection": "接続",
+    "label_audio": "オーディオ",
+    "label_settings": "設定",
+    "label_log": "ログ",
+    "label_about": "情報",
+
+    "label_port": "ポート",
+    "label_ip_address": "IPアドレス",
+    "label_sample_rate": "サンプルレート",
+    "label_channels": "チャンネル",
+    "label_codec": "コーデック",
+    "label_volume": "音量",
+    "label_output_device": "出力デバイス",
+    "label_connection_mode": "接続モード",
+    "label_latency": "レイテンシー",
+    "label_audio_level": "オーディオレベル",
+    "label_device": "デバイス",
+    "label_language": "言語",
+
+    "mode_wifi": "Wi-Fi",
+    "mode_usb": "USB",
+    "mode_bluetooth": "Bluetooth",
+
+    "codec_pcm": "PCM（非圧縮）",
+    "codec_opus": "Opus（圧縮）",
+
+    "channels_mono": "モノラル",
+    "channels_stereo": "ステレオ",
+
+    "settings_noise_suppression": "ノイズ抑制",
+    "settings_auto_start": "自動起動",
+    "settings_minimize_tray": "トレイに最小化",
+    "settings_dark_theme": "ダークテーマ",
+    "settings_virtual_mic": "仮想マイク",
+    "settings_virtual_mic_desc": "VoiceMic仮想マイクドライバーにオーディオを転送",
+    "settings_keep_on_top": "常に前面表示",
+
+    "log_server_started": "ポート {port} でサーバー開始",
+    "log_server_stopped": "サーバー停止",
+    "log_client_connected": "クライアント接続：{device}（{ip}）",
+    "log_client_disconnected": "クライアント切断",
+    "log_driver_active": "仮想マイクドライバー有効",
+    "log_driver_not_found": "仮想マイクドライバーが見つかりません — オーディオ再生を使用",
+    "log_ns_on": "ノイズ抑制：オン",
+    "log_ns_off": "ノイズ抑制：オフ",
+
+    "about_version": "バージョン {version}",
+    "about_description": "仮想マイクアプリケーション。\nスマートフォンからPCにオーディオをストリーミング。",
+
+    "error_port_in_use": "ポート {port} は使用中です",
+    "error_no_audio_device": "オーディオ出力デバイスが見つかりません",
+    "error_driver_install": "仮想マイクドライバーがインストールされていません。\nVoiceMic Setupでインストールしてください。",
+
+    "tooltip_volume": "音量調整（0-200%）",
+    "tooltip_start": "VoiceMicサーバーを開始",
+    "tooltip_stop": "サーバー停止とクライアント切断"
+}

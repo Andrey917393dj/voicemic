@@ -25,7 +25,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r pc-server/requirements.txt
+          pip install pipwin
+          pipwin install pyaudio
+          pip install -r pc-server/requirements.txt --ignore-installed pyaudio
+        shell: powershell
 
       - name: Build EXE with PyInstaller
         run: |
@@ -39,7 +42,7 @@ jobs:
 
       - name: Generate icon and wizard images
         run: |
-          mkdir -p assets
+          New-Item -ItemType Directory -Path assets -Force | Out-Null
           python -c "
           from PIL import Image, ImageDraw
           img = Image.new('RGBA', (256, 256), (108, 92, 231, 255))

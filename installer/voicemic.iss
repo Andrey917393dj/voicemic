@@ -60,8 +60,6 @@ Name: "installdriver"; Description: "Install VoiceMic Virtual Microphone driver"
 [Files]
 ; Main application
 Source: "..\dist\VoiceMic\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Language files
-Source: "..\pc-server\lang\*"; DestDir: "{app}\lang"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Virtual audio driver
 Source: "..\driver\build\*"; DestDir: "{app}\driver"; Flags: ignoreversion recursesubdirs createallsubdirs; Tasks: installdriver
 ; Driver installer utility

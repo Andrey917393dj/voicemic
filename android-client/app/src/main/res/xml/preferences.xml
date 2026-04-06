@@ -2,12 +2,32 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory android:title="Transport">
+
+        <ListPreference
+            android:key="transport"
+            android:title="Transport"
+            android:summary="How the PC connects to this device"
+            android:defaultValue="wifi"
+            android:entries="@array/transport_entries"
+            android:entryValues="@array/transport_values" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="Audio">
+
+        <ListPreference
+            android:key="audio_source"
+            android:title="Audio source"
+            android:summary="Microphone input source"
+            android:defaultValue="mic"
+            android:entries="@array/audio_source_entries"
+            android:entryValues="@array/audio_source_values" />
 
         <ListPreference
             android:key="sample_rate"
             android:title="Sample Rate"
-            android:summary="Audio sample rate (higher = better quality)"
+            android:summary="Audio sample rate"
             android:defaultValue="48000"
             android:entries="@array/sample_rate_entries"
             android:entryValues="@array/sample_rate_values" />
@@ -15,7 +35,7 @@
         <ListPreference
             android:key="codec"
             android:title="Codec"
-            android:summary="Audio codec for streaming"
+            android:summary="Audio codec"
             android:defaultValue="0"
             android:entries="@array/codec_entries"
             android:entryValues="@array/codec_values" />
@@ -23,38 +43,22 @@
         <SwitchPreferenceCompat
             android:key="stereo"
             android:title="Stereo"
-            android:summary="Record in stereo (if supported by device)"
+            android:summary="Record in stereo (if supported)"
             android:defaultValue="false" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Connection">
+    <PreferenceCategory android:title="Network">
 
-        <ListPreference
-            android:key="connection_mode"
-            android:title="Connection Mode"
-            android:summary="How to connect to the PC"
-            android:defaultValue="wifi"
-            android:entries="@array/connection_mode_entries"
-            android:entryValues="@array/connection_mode_values" />
-
-        <SwitchPreferenceCompat
-            android:key="auto_connect"
-            android:title="Auto-Connect"
-            android:summary="Automatically connect on app start"
-            android:defaultValue="false" />
+        <EditTextPreference
+            android:key="server_port"
+            android:title="Server port"
+            android:summary="Port for PC client to connect"
+            android:defaultValue="8125" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Advanced">
-
-        <ListPreference
-            android:key="buffer_size"
-            android:title="Buffer Size"
-            android:summary="Lower = less latency, higher = more stable"
-            android:defaultValue="4096"
-            android:entries="@array/buffer_entries"
-            android:entryValues="@array/buffer_values" />
+    <PreferenceCategory android:title="Misc">
 
         <SwitchPreferenceCompat
             android:key="noise_suppression"

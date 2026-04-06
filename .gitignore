@@ -44,3 +44,7 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Logs
+logs_*/
+logs_*.zip

@@ -1,33 +1,33 @@
-# 🎤 VoiceMic — Use Phone as PC Microphone
+# VoiceMic — Use Phone as PC Microphone
 
-Open-source analog of WO Mic. Stream your phone's microphone to your PC over WiFi or USB.
+Turn your Android phone into a wireless microphone for your PC.
 Includes a **virtual audio driver** — no third-party virtual cable needed.
 
 ## Features
 
+- **Phone-as-server architecture** — phone runs server, PC connects as client
 - **Built-in virtual microphone driver** — appears as a real mic in Windows
 - **Windows installer** (Setup.exe) with driver auto-install
-- **WiFi & USB** connection modes
+- **WiFi, USB, Bluetooth, WiFi Direct** transport support
 - **PCM / Opus** codec support
-- **Multi-language UI** (English, Русский, Deutsch, Français, Español, 中文, 日本語)
+- **Classic Win32-style** PC client GUI (menu bar, connect dialog, status bar)
+- **Compact** Android app (play/stop in action bar, IP display)
 - **Real-time audio level** monitoring
 - **Latency display** (ping/pong)
 - **Volume control** (0-200%)
-- **Noise suppression** on both PC and Android
+- **Noise suppression** on Android
 - **Mute/unmute** on phone
 - **System tray** on PC (minimize to tray)
-- **Dark/Light theme** on both platforms
-- **Auto-connect** on app start
+- **Auto-reconnect** on disconnect
 - **Keep screen on** while streaming
-- **Always on top** window option
 - **Foreground service** — works with screen off
-- **Headless mode** — run PC server without GUI
+- **Headless mode** — run PC client without GUI
 
 ---
 
 ## Quick Start
 
-### 1. Download Installer
+### 1. Download
 Go to **Releases** on GitHub and download:
 - `VoiceMic-Setup-1.0.0.exe` — PC installer (includes virtual mic driver)
 - `VoiceMic-debug.apk` — Android app
@@ -35,8 +35,8 @@ Go to **Releases** on GitHub and download:
 ### 2. Install & Run
 1. Run `VoiceMic-Setup-1.0.0.exe` — installs the app and virtual microphone driver
 2. Install the APK on your phone
-3. Launch VoiceMic on PC — note the **IP address** displayed
-4. Enter that IP in the phone app and press **Connect**
+3. Open VoiceMic on phone → tap **Play** → note the IP address shown
+4. Open VoiceMic on PC → **Connection → Connect...** → enter phone's IP → OK
 5. Your phone microphone now streams to PC!
 
 ### 3. Use as Microphone in Apps
@@ -45,13 +45,11 @@ The VoiceMic virtual driver registers as **"VoiceMic Virtual Microphone"** in Wi
 - In **Zoom** → Settings → Audio → Microphone → select **VoiceMic Virtual Microphone**
 - Works in any app that accepts a microphone input
 
-> **Fallback:** If you prefer, you can also route audio through [VB-Audio Virtual Cable](https://vb-audio.com/Cable/) using the Output Device setting.
-
 ---
 
 ## Build from Source
 
-### PC Server (.exe)
+### PC Client (.exe)
 
 ```bash
 cd pc-server
@@ -65,9 +63,9 @@ pyinstaller voicemic.spec --clean
 # Output: dist/VoiceMic/VoiceMic.exe
 ```
 
-**Headless mode** (no GUI, for servers):
+**Headless mode** (no GUI):
 ```bash
-python main.py --headless --port 8125
+python main.py --headless --ip 192.168.1.100 --port 8125
 ```
 
 ### Android App (.apk)
@@ -76,7 +74,6 @@ Requires Android SDK & JDK 17.
 
 ```bash
 cd android-client
-gradle wrapper --gradle-version 8.2
 ./gradlew assembleDebug
 # Output: app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -101,29 +98,17 @@ iscc installer/voicemic.iss
 
 ---
 
-## Build via GitHub Actions (No Local Tools Needed)
+## Build via GitHub Actions
 
 GitHub builds everything in the cloud — no local SDK or WDK required.
 
-### Step-by-step:
-
-1. **Create a GitHub repo** and push this code:
-   ```bash
-   git init
-   git add .
-   git commit -m "VoiceMic v1.0"
-   git remote add origin https://github.com/YOUR_USERNAME/voicemic.git
-   git push -u origin main
-   ```
-
-2. **Go to Actions tab** — three workflows run automatically:
-   - `Build Windows EXE + Installer` → produces `VoiceMic-Setup` and `VoiceMic-Windows`
-   - `Build Android APK` → produces `VoiceMic-Android-Debug`
-   - `Build Virtual Audio Driver` → produces `voicemic-driver-x64`
-
-3. **Download artifacts** from the latest workflow run
-
-4. **For release builds** (attached to GitHub Releases):
+1. Push code to GitHub
+2. **Actions tab** — three workflows run automatically:
+   - `Build Windows EXE + Installer` → `VoiceMic-Setup` and `VoiceMic-Windows`
+   - `Build Android APK` → `VoiceMic-Android-Debug`
+   - `Build Virtual Audio Driver` → `voicemic-driver-x64`
+3. Download artifacts from the latest workflow run
+4. For release builds:
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
@@ -133,50 +118,44 @@ GitHub builds everything in the cloud — no local SDK or WDK required.
 
 ## Connection Modes
 
-### WiFi
+### WiFi (default)
 - Phone and PC must be on the **same WiFi network**
-- Enter PC's IP address in the phone app
+- Start server on phone → enter phone's IP in PC client
 - Default port: **8125**
 
-### USB (ADB)
+### USB
 1. Enable **USB Debugging** on phone
 2. Connect phone via USB
-3. Run: `adb forward tcp:8125 tcp:8125`  (or use `usb_connect.bat`)
-4. In phone app, connect to `127.0.0.1:8125`
+3. Run: `adb forward tcp:8125 tcp:8125`
+4. In PC client, connect to `127.0.0.1`
 
----
+### Bluetooth
+- Pair phone with PC
+- Select Bluetooth transport in both apps
 
-## Multi-Language Support
-
-The PC app auto-detects your system language. Supported:
-
-| Code | Language |
-|------|----------|
-| en | English |
-| ru | Русский |
-| de | Deutsch |
-| fr | Français |
-| es | Español |
-| zh | 中文 |
-| ja | 日本語 |
-
-Switch language any time from the dropdown in the app header.
+### WiFi Direct
+- Connect devices via WiFi Direct
+- Use the WiFi Direct IP address
 
 ---
 
 ## Architecture
 
-### Virtual Audio Driver
+**Phone = Server, PC = Client**
 
-The VoiceMic driver is a WDM audio miniport driver that:
-1. Registers as a **capture device** (microphone) in Windows
-2. Reads audio from a **shared memory ring buffer**
-3. The PC server app writes received audio into that buffer
-4. Any application can select "VoiceMic Virtual Microphone" as input
-
-Communication flow:
 ```
-Phone Mic → [TCP/WiFi] → PC Server → Shared Memory → Virtual Driver → Apps
+Phone (Server)                         PC (Client)
+┌─────────────┐                    ┌──────────────────┐
+│ Mic Capture  │                    │ VoiceMic Client  │
+│      ↓       │   TCP/WiFi        │      ↓           │
+│ TCP Server  ─┼──────────────────→│ Audio Player     │
+│ (port 8125)  │  Audio packets    │      ↓           │
+└─────────────┘                    │ Shared Memory    │
+                                   │      ↓           │
+                                   │ Virtual Driver   │
+                                   │      ↓           │
+                                   │ Apps (Discord..) │
+                                   └──────────────────┘
 ```
 
 ### Protocol
@@ -187,15 +166,15 @@ Custom TCP protocol with binary packets:
 [MAGIC "VMIC" (4B)] [TYPE (1B)] [LENGTH (4B)] [PAYLOAD (NB)]
 ```
 
-| Packet | Type | Description |
-|--------|------|-------------|
-| Handshake | 0x01 | Client → Server: sample rate, channels, codec, device name |
-| Handshake ACK | 0x02 | Server → Client: accepted/rejected |
-| Audio | 0x10 | Client → Server: raw audio frames |
-| Control | 0x20 | Bidirectional: mute, volume, noise suppress |
-| Ping | 0x30 | Client → Server: timestamp |
-| Pong | 0x31 | Server → Client: echo timestamp |
-| Disconnect | 0xFF | Graceful disconnect |
+| Packet | Type | Direction | Description |
+|--------|------|-----------|-------------|
+| Handshake | 0x01 | Phone → PC | Audio format: sample rate, channels, codec, device name |
+| Handshake ACK | 0x02 | PC → Phone | Accepted/rejected |
+| Audio | 0x10 | Phone → PC | Raw audio frames |
+| Control | 0x20 | Bidirectional | Mute, volume, noise suppress |
+| Ping | 0x30 | PC → Phone | Timestamp for latency |
+| Pong | 0x31 | Phone → PC | Echo timestamp |
+| Disconnect | 0xFF | Either | Graceful disconnect |
 
 ---
 
@@ -204,28 +183,24 @@ Custom TCP protocol with binary packets:
 ```
 ├── pc-server/
 │   ├── main.py            # Entry point (GUI + headless)
-│   ├── gui.py             # CustomTkinter UI with i18n
-│   ├── server.py          # TCP server
+│   ├── gui.py             # Classic Win32-style tkinter GUI
+│   ├── server.py          # TCP client (connects to phone)
 │   ├── audio_player.py    # Audio output (PyAudio/sounddevice)
 │   ├── audio_bridge.py    # Shared memory bridge to virtual driver
 │   ├── protocol.py        # Wire protocol
 │   ├── config.py          # Persistent settings
-│   ├── noise_filter.py    # Software noise suppression
-│   ├── opus_decoder.py    # Opus codec decoder
-│   ├── i18n.py            # Internationalization system
 │   ├── tray_icon.py       # System tray
-│   ├── lang/              # Language files (en, ru, de, fr, es, zh, ja)
 │   ├── requirements.txt   # Python dependencies
 │   └── voicemic.spec      # PyInstaller build spec
 │
 ├── android-client/
 │   ├── app/src/main/java/com/voicemic/app/
-│   │   ├── MainActivity.java
-│   │   ├── AudioStreamService.java
+│   │   ├── MainActivity.java       # Main UI (play/stop)
+│   │   ├── AudioStreamService.java # Foreground service + mic capture
 │   │   ├── AudioEncoder.java       # Opus encoding via MediaCodec
-│   │   ├── NetworkClient.java
-│   │   ├── SettingsActivity.java
-│   │   └── Protocol.java
+│   │   ├── NetworkClient.java      # TCP server (accepts PC connections)
+│   │   ├── SettingsActivity.java   # Settings screen
+│   │   └── Protocol.java           # Wire protocol (Java)
 │   ├── app/src/main/res/
 │   └── app/build.gradle
 │
@@ -234,7 +209,7 @@ Custom TCP protocol with binary packets:
 │   ├── minwave.cpp        # Wave cyclic miniport (capture)
 │   ├── common.h           # Shared definitions
 │   ├── voicemic_audio.inf # Driver INF file
-│   └── voicemic_audio.vcxproj  # Visual Studio/WDK project
+│   └── voicemic_audio.vcxproj
 │
 ├── installer/
 │   ├── voicemic.iss       # Inno Setup installer script
@@ -243,8 +218,9 @@ Custom TCP protocol with binary packets:
 ├── .github/workflows/
 │   ├── build-exe.yml      # Build EXE + Installer
 │   ├── build-apk.yml      # Build Android APK
-│   └── build-driver.yml   # Build virtual audio driver (WDK)
+│   └── build-driver.yml   # Build virtual audio driver
 │
+├── SPEC.md                # Detailed specification
 └── README.md
 ```
 
@@ -254,7 +230,7 @@ Custom TCP protocol with binary packets:
 
 ### PC
 - Windows 10/11 (64-bit)
-- The installer handles everything — no additional software needed
+- The installer handles everything
 
 ### For Building from Source
 - Python 3.9+

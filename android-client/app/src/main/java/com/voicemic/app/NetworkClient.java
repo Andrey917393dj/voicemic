@@ -5,22 +5,25 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * TCP client that connects to VoiceMic PC server and streams audio.
+ * TCP server that accepts connections from VoiceMic PC client.
+ * Architecture: Phone = server, PC = client.
+ *
+ * Flow:
+ * 1. startServer(port) - listen for PC connections
+ * 2. PC connects
+ * 3. Phone sends handshake (audio format info)
+ * 4. PC sends handshake ACK
+ * 5. Phone captures mic and sends audio packets
  */
 public class NetworkClient {
 
-    private static final String TAG = "NetworkClient";
-    private static final int CONNECT_TIMEOUT_MS = 5000;
-    private static final int PING_INTERVAL_MS = 2000;
+    private static final String TAG = "NetworkServer";
 
     public interface Listener {
         void onConnected();
@@ -29,15 +32,21 @@ public class NetworkClient {
         void onLatencyUpdate(long latencyMs);
     }
 
-    private Socket socket;
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
     private OutputStream outputStream;
     private InputStream inputStream;
+    private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean connected = new AtomicBoolean(false);
-    private final AtomicBoolean connecting = new AtomicBoolean(false);
     private Listener listener;
-    private ExecutorService executor;
+    private Thread acceptThread;
     private Thread readerThread;
-    private Thread pingThread;
+
+    // Audio config set before starting server
+    private int sampleRate = 48000;
+    private int channels = 1;
+    private int codec = Protocol.CODEC_PCM;
+    private String deviceName = "Android";
 
     public void setListener(Listener listener) {
         this.listener = listener;
@@ -47,78 +56,127 @@ public class NetworkClient {
         return connected.get();
     }
 
-    public void connect(String host, int port, int sampleRate, int channels, int codec, String deviceName) {
-        if (connected.get() || connecting.get()) return;
-        connecting.set(true);
-
-        executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            try {
-                socket = new Socket();
-                socket.setTcpNoDelay(true);
-                socket.setSoTimeout(0);
-                socket.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT_MS);
-
-                outputStream = socket.getOutputStream();
-                inputStream = socket.getInputStream();
-
-                // Send handshake
-                byte[] handshake = Protocol.buildHandshake(sampleRate, channels, codec, deviceName);
-                outputStream.write(handshake);
-                outputStream.flush();
-
-                // Read handshake ACK
-                byte[] header = readExact(inputStream, Protocol.HEADER_SIZE);
-                int[] parsed = Protocol.parseHeader(header);
-                if (parsed == null || parsed[0] != Protocol.PKT_HANDSHAKE_ACK) {
-                    throw new IOException("Invalid handshake response");
-                }
-
-                byte[] payload = readExact(inputStream, parsed[1]);
-                if (!Protocol.parseHandshakeAck(payload)) {
-                    String msg = payload.length > 1 ?
-                            new String(payload, 1, payload.length - 1) : "Rejected";
-                    throw new IOException("Server rejected: " + msg);
-                }
-
-                connected.set(true);
-                connecting.set(false);
-
-                if (listener != null) listener.onConnected();
-
-                // Start reader and ping threads
-                startReaderThread();
-                startPingThread();
-
-            } catch (IOException e) {
-                connecting.set(false);
-                Log.e(TAG, "Connection failed", e);
-                if (listener != null) listener.onError("Connection failed: " + e.getMessage());
-                closeSocket();
-            }
-        });
+    public boolean isRunning() {
+        return running.get();
     }
 
-    public void disconnect() {
-        if (!connected.get() && !connecting.get()) return;
-        connected.set(false);
-        connecting.set(false);
+    public void setAudioConfig(int sampleRate, int channels, int codec, String deviceName) {
+        this.sampleRate = sampleRate;
+        this.channels = channels;
+        this.codec = codec;
+        this.deviceName = deviceName;
+    }
 
+    /**
+     * Start TCP server listening for PC client connections.
+     */
+    public void startServer(int port) {
+        if (running.get()) return;
+        running.set(true);
+
+        acceptThread = new Thread(() -> {
+            try {
+                serverSocket = new ServerSocket(port);
+                serverSocket.setSoTimeout(1000); // check running flag every second
+                Log.i(TAG, "Server listening on port " + port);
+
+                while (running.get()) {
+                    try {
+                        Socket client = serverSocket.accept();
+                        client.setTcpNoDelay(true);
+                        handleClient(client);
+                    } catch (SocketTimeoutException e) {
+                        // Normal timeout, check running flag and loop
+                    }
+                }
+            } catch (IOException e) {
+                if (running.get()) {
+                    Log.e(TAG, "Server error", e);
+                    if (listener != null) listener.onError("Server error: " + e.getMessage());
+                }
+            } finally {
+                closeServerSocket();
+                running.set(false);
+            }
+        }, "VoiceMic-Accept");
+        acceptThread.start();
+    }
+
+    /**
+     * Handle a connected PC client.
+     */
+    private void handleClient(Socket client) {
+        // Disconnect previous client if any
+        disconnectClient();
+
+        clientSocket = client;
+        try {
+            outputStream = client.getOutputStream();
+            inputStream = client.getInputStream();
+
+            // Send handshake to PC (phone tells PC its audio format)
+            byte[] handshake = Protocol.buildHandshake(sampleRate, channels, codec, deviceName);
+            outputStream.write(handshake);
+            outputStream.flush();
+
+            // Read handshake ACK from PC
+            byte[] header = readExact(inputStream, Protocol.HEADER_SIZE);
+            int[] parsed = Protocol.parseHeader(header);
+            if (parsed == null || parsed[0] != Protocol.PKT_HANDSHAKE_ACK) {
+                throw new IOException("Invalid handshake ACK from client");
+            }
+            byte[] payload = readExact(inputStream, parsed[1]);
+            if (!Protocol.parseHandshakeAck(payload)) {
+                throw new IOException("Client rejected connection");
+            }
+
+            connected.set(true);
+            if (listener != null) listener.onConnected();
+
+            // Start reader thread for incoming packets from PC (ping, control, disconnect)
+            startReaderThread();
+
+        } catch (IOException e) {
+            Log.e(TAG, "Client handshake failed", e);
+            if (listener != null) listener.onError("Handshake failed: " + e.getMessage());
+            disconnectClient();
+        }
+    }
+
+    /**
+     * Stop the server completely.
+     */
+    public void stopServer() {
+        running.set(false);
+        disconnectClient();
+        closeServerSocket();
+        if (acceptThread != null) {
+            try { acceptThread.join(3000); } catch (InterruptedException ignored) {}
+            acceptThread = null;
+        }
+    }
+
+    /**
+     * Disconnect current client but keep server running.
+     */
+    public void disconnectClient() {
+        boolean was = connected.getAndSet(false);
         try {
             if (outputStream != null) {
                 byte[] pkt = Protocol.buildDisconnect();
                 outputStream.write(pkt);
                 outputStream.flush();
             }
-        } catch (IOException ignored) {
+        } catch (IOException ignored) {}
+        closeClientSocket();
+        if (was && listener != null) {
+            listener.onDisconnected("Disconnected");
         }
+    }
 
-        closeSocket();
-
-        if (executor != null) {
-            executor.shutdownNow();
-            executor = null;
-        }
+    // Keep old API name for backward compatibility with AudioStreamService
+    public void disconnect() {
+        stopServer();
     }
 
     public void sendAudio(byte[] data, int offset, int length) {
@@ -150,11 +208,11 @@ public class NetworkClient {
     private void startReaderThread() {
         readerThread = new Thread(() -> {
             try {
-                while (connected.get()) {
+                while (connected.get() && inputStream != null) {
                     byte[] header = readExact(inputStream, Protocol.HEADER_SIZE);
                     int[] parsed = Protocol.parseHeader(header);
                     if (parsed == null) {
-                        handleDisconnect("Invalid packet from server");
+                        handleDisconnect("Invalid packet from client");
                         return;
                     }
 
@@ -163,18 +221,27 @@ public class NetworkClient {
                     byte[] payload = payloadLen > 0 ? readExact(inputStream, payloadLen) : new byte[0];
 
                     switch (pktType) {
-                        case Protocol.PKT_PONG:
-                            long sentTs = Protocol.parsePong(payload);
-                            long latency = System.currentTimeMillis() - sentTs;
-                            if (listener != null) listener.onLatencyUpdate(latency);
+                        case Protocol.PKT_PING:
+                            // Respond with pong
+                            if (payload.length >= 8) {
+                                long ts = Protocol.parsePong(payload);
+                                byte[] pong = Protocol.buildPacket(Protocol.PKT_PONG,
+                                        java.nio.ByteBuffer.allocate(8)
+                                                .order(java.nio.ByteOrder.BIG_ENDIAN)
+                                                .putLong(ts).array());
+                                if (outputStream != null) {
+                                    outputStream.write(pong);
+                                    outputStream.flush();
+                                }
+                            }
                             break;
 
                         case Protocol.PKT_CONTROL:
-                            // Handle server controls if needed
+                            // Handle controls from PC if needed
                             break;
 
                         case Protocol.PKT_DISCONNECT:
-                            handleDisconnect("Server disconnected");
+                            handleDisconnect("Client disconnected");
                             return;
                     }
                 }
@@ -188,42 +255,24 @@ public class NetworkClient {
         readerThread.start();
     }
 
-    private void startPingThread() {
-        pingThread = new Thread(() -> {
-            try {
-                while (connected.get()) {
-                    Thread.sleep(PING_INTERVAL_MS);
-                    if (!connected.get() || outputStream == null) break;
-                    byte[] ping = Protocol.buildPing(System.currentTimeMillis());
-                    outputStream.write(ping);
-                    outputStream.flush();
-                }
-            } catch (InterruptedException | IOException ignored) {
-            }
-        }, "VoiceMic-Ping");
-        pingThread.setDaemon(true);
-        pingThread.start();
-    }
-
     private void handleDisconnect(String reason) {
         if (!connected.getAndSet(false)) return;
-        closeSocket();
+        closeClientSocket();
         if (listener != null) listener.onDisconnected(reason);
     }
 
-    private void closeSocket() {
-        try {
-            if (inputStream != null) inputStream.close();
-        } catch (IOException ignored) {}
-        try {
-            if (outputStream != null) outputStream.close();
-        } catch (IOException ignored) {}
-        try {
-            if (socket != null) socket.close();
-        } catch (IOException ignored) {}
+    private void closeClientSocket() {
+        try { if (inputStream != null) inputStream.close(); } catch (IOException ignored) {}
+        try { if (outputStream != null) outputStream.close(); } catch (IOException ignored) {}
+        try { if (clientSocket != null) clientSocket.close(); } catch (IOException ignored) {}
         inputStream = null;
         outputStream = null;
-        socket = null;
+        clientSocket = null;
+    }
+
+    private void closeServerSocket() {
+        try { if (serverSocket != null) serverSocket.close(); } catch (IOException ignored) {}
+        serverSocket = null;
     }
 
     private byte[] readExact(InputStream is, int n) throws IOException {

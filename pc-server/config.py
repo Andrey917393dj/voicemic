@@ -6,22 +6,19 @@ import os
 from pathlib import Path
 
 DEFAULT_CONFIG = {
-    "port": 8125,
+    "control_port": 8125,
+    "media_port": 8126,
+    "transport": "wifi",        # wifi, usb, bluetooth, wifi_direct
+    "last_ip": "",              # last used phone IP
+    "last_bt_device": "",       # last used bluetooth device
     "sample_rate": 48000,
     "channels": 1,
-    "codec": 0,  # 0=PCM, 1=Opus
     "buffer_size": 4096,
+    "play_in_speaker": False,   # Options -> Play in speaker
+    "auto_reconnect": False,    # Options -> When aborting -> Auto reconnect
+    "flash_window": False,      # Options -> When aborting -> Flash window
+    "debug_mode": False,        # Options -> Advanced -> Enable debug mode
     "volume": 100,
-    "noise_suppression": False,
-    "auto_connect": False,
-    "minimize_to_tray": True,
-    "dark_theme": True,
-    "output_device": "",  # empty = default
-    "connection_mode": "wifi",  # wifi, usb
-    "adb_port": 8125,
-    "language": None,  # None = auto-detect from system
-    "virtual_mic": True,  # use virtual audio driver if available
-    "always_on_top": False,
 }
 
 CONFIG_DIR = Path(os.environ.get("APPDATA", Path.home())) / "VoiceMic"

@@ -54,6 +54,7 @@ public class AudioStreamService extends Service {
     private int sampleRate = 48000;
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+    private int audioSource = MediaRecorder.AudioSource.MIC;
     private int bufferSize;
     private int codec = Protocol.CODEC_PCM;
 
@@ -78,15 +79,16 @@ public class AudioStreamService extends Service {
         networkClient.setListener(new NetworkClient.Listener() {
             @Override
             public void onConnected() {
-                if (statusListener != null) statusListener.onConnected(getServerHost());
+                if (statusListener != null) statusListener.onConnected("PC Client");
                 startRecording();
+                updateNotification("Streaming...");
             }
 
             @Override
             public void onDisconnected(String reason) {
                 stopRecording();
                 if (statusListener != null) statusListener.onDisconnected(reason);
-                updateNotification("Disconnected");
+                updateNotification("Waiting for connection...");
             }
 
             @Override
@@ -118,27 +120,44 @@ public class AudioStreamService extends Service {
         this.statusListener = listener;
     }
 
-    public void connect(String host, int port) {
+    /**
+     * Start the audio server on the given port. Phone listens for PC connections.
+     */
+    public void startServer(int port) {
         loadSettings();
         acquireWakeLock();
-        updateNotification("Connecting to " + host + ":" + port + "...");
-        if (statusListener != null) statusListener.onStatusChanged("Connecting...");
 
         String deviceName = Build.MANUFACTURER + " " + Build.MODEL;
         int channels = (channelConfig == AudioFormat.CHANNEL_IN_STEREO) ? 2 : 1;
-        networkClient.connect(host, port, sampleRate, channels, codec, deviceName);
+        networkClient.setAudioConfig(sampleRate, channels, codec, deviceName);
+
+        updateNotification("Waiting for connection on port " + port + "...");
+        if (statusListener != null) statusListener.onStatusChanged("Waiting for connection...");
+
+        networkClient.startServer(port);
+    }
+
+    /**
+     * Stop the server and disconnect any client.
+     */
+    public void stopServer() {
+        stopRecording();
+        networkClient.stopServer();
+        releaseWakeLock();
+        updateNotification("Stopped");
+        if (statusListener != null) statusListener.onStatusChanged("Stopped");
     }
 
     public void disconnect() {
-        stopRecording();
-        networkClient.disconnect();
-        releaseWakeLock();
-        updateNotification("Disconnected");
-        if (statusListener != null) statusListener.onStatusChanged("Disconnected");
+        stopServer();
     }
 
     public boolean isConnected() {
         return networkClient.isConnected();
+    }
+
+    public boolean isServerRunning() {
+        return networkClient.isRunning();
     }
 
     public void setMuted(boolean muted) {
@@ -163,11 +182,26 @@ public class AudioStreamService extends Service {
 
         String codecStr = prefs.getString("codec", "0");
         codec = Integer.parseInt(codecStr);
-    }
 
-    private String getServerHost() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        return prefs.getString("server_ip", "192.168.1.1");
+        String audioSourceStr = prefs.getString("audio_source", "mic");
+        switch (audioSourceStr) {
+            case "default":
+                audioSource = MediaRecorder.AudioSource.DEFAULT;
+                break;
+            case "camcorder":
+                audioSource = MediaRecorder.AudioSource.CAMCORDER;
+                break;
+            case "voice_communication":
+                audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION;
+                break;
+            case "voice_recognition":
+                audioSource = MediaRecorder.AudioSource.VOICE_RECOGNITION;
+                break;
+            case "mic":
+            default:
+                audioSource = MediaRecorder.AudioSource.MIC;
+                break;
+        }
     }
 
     private void startRecording() {
@@ -181,7 +215,7 @@ public class AudioStreamService extends Service {
 
         try {
             audioRecord = new AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
+                    audioSource,
                     sampleRate,
                     channelConfig,
                     audioFormat,

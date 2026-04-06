@@ -35,11 +35,6 @@ jobs:
           cd pc-server
           pyinstaller voicemic.spec --clean
 
-      - name: Copy language files to dist
-        run: |
-          Copy-Item -Recurse "pc-server/lang" "pc-server/dist/VoiceMic/lang" -ErrorAction SilentlyContinue
-        shell: powershell
-
       - name: Generate icon and wizard images
         run: |
           New-Item -ItemType Directory -Path assets -Force | Out-Null

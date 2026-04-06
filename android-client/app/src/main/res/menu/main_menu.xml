@@ -3,6 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_play"
+        android:title="Play"
+        android:icon="@android:drawable/ic_media_play"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_stop"
+        android:title="Stop"
+        android:icon="@android:drawable/ic_media_pause"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:icon="@android:drawable/ic_menu_preferences"

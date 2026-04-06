@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,8 +18,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,10 +30,10 @@ import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
 
 /**
- * Main activity — connection screen with status, audio level, and controls.
+ * Main activity — VoiceMic server interface.
+ * Play/Stop in action bar, shows IP address, server mode.
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -53,15 +54,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // UI
-    private EditText ipInput;
-    private EditText portInput;
-    private MaterialButton connectBtn;
-    private MaterialButton muteBtn;
+    private ImageView statusIcon;
     private TextView statusText;
+    private TextView ipText;
     private TextView latencyText;
-    private TextView deviceInfoText;
+    private TextView infoText;
     private ProgressBar audioLevelBar;
-    private View connectedCard;
+    private MaterialButton muteBtn;
+    private MenuItem playMenuItem;
+    private MenuItem stopMenuItem;
+
+    private boolean serverRunning = false;
 
     // Service
     private AudioStreamService streamService;
@@ -76,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
             serviceBound = true;
             streamService.setStatusListener(statusListener);
             updateUIState();
-            tryAutoConnect();
         }
 
         @Override
@@ -91,33 +93,34 @@ public class MainActivity extends AppCompatActivity {
         public void onStatusChanged(String status) {
             mainHandler.post(() -> {
                 statusText.setText(status);
-                updateUIState();
             });
         }
 
         @Override
-        public void onConnected(String serverIp) {
+        public void onConnected(String clientInfo) {
             mainHandler.post(() -> {
-                statusText.setText("Connected to " + serverIp);
-                connectBtn.setText("Disconnect");
-                connectBtn.setIconResource(android.R.drawable.ic_menu_close_clear_cancel);
-                connectedCard.setVisibility(View.VISIBLE);
+                statusText.setText("Connected");
+                infoText.setText("Client connected");
+                audioLevelBar.setVisibility(View.VISIBLE);
+                muteBtn.setVisibility(View.VISIBLE);
                 applyKeepScreenOn(true);
-                updateUIState();
             });
         }
 
         @Override
         public void onDisconnected(String reason) {
             mainHandler.post(() -> {
-                statusText.setText("Disconnected: " + reason);
-                connectBtn.setText("Connect");
-                connectBtn.setIconResource(android.R.drawable.ic_menu_send);
-                connectedCard.setVisibility(View.GONE);
+                if (serverRunning) {
+                    statusText.setText("Waiting for connection...");
+                } else {
+                    statusText.setText("Idle");
+                }
+                audioLevelBar.setVisibility(View.GONE);
                 audioLevelBar.setProgress(0);
-                latencyText.setText("— ms");
+                muteBtn.setVisibility(View.GONE);
+                latencyText.setText("");
+                infoText.setText("VoiceMic");
                 applyKeepScreenOn(false);
-                updateUIState();
             });
         }
 
@@ -126,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
             mainHandler.post(() -> {
                 statusText.setText("Error: " + error);
                 Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG).show();
-                updateUIState();
             });
         }
 
@@ -146,33 +148,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("VoiceMic");
+        }
+
         // Find views
-        ipInput = findViewById(R.id.ip_input);
-        portInput = findViewById(R.id.port_input);
-        connectBtn = findViewById(R.id.connect_btn);
-        muteBtn = findViewById(R.id.mute_btn);
+        statusIcon = findViewById(R.id.status_icon);
         statusText = findViewById(R.id.status_text);
+        ipText = findViewById(R.id.ip_text);
         latencyText = findViewById(R.id.latency_text);
-        deviceInfoText = findViewById(R.id.device_info_text);
+        infoText = findViewById(R.id.info_text);
         audioLevelBar = findViewById(R.id.audio_level_bar);
-        connectedCard = findViewById(R.id.connected_card);
-
-        // Load saved IP/port
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        ipInput.setText(prefs.getString("server_ip", "192.168.1.1"));
-        portInput.setText(prefs.getString("server_port", "8125"));
-
-        // Device info
-        deviceInfoText.setText(Build.MANUFACTURER + " " + Build.MODEL);
-
-        // Connect button
-        connectBtn.setOnClickListener(v -> onConnectClicked());
+        muteBtn = findViewById(R.id.mute_btn);
 
         // Mute button
         muteBtn.setOnClickListener(v -> onMuteClicked());
 
-        // Initially hide connected card
-        connectedCard.setVisibility(View.GONE);
+        // Show device IP
+        ipText.setText(getLocalIpAddress());
 
         // Request permissions
         requestPermissions();
@@ -181,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // Start and bind to service
         Intent intent = new Intent(this, AudioStreamService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent);
@@ -200,54 +192,70 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // ── Menu with Play / Stop / Settings ──
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        playMenuItem = menu.findItem(R.id.action_play);
+        stopMenuItem = menu.findItem(R.id.action_stop);
+        updateMenuState();
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_settings) {
+        int id = item.getItemId();
+        if (id == R.id.action_play) {
+            onPlayClicked();
+            return true;
+        } else if (id == R.id.action_stop) {
+            onStopClicked();
+            return true;
+        } else if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void onConnectClicked() {
+    // ── Actions ──
+
+    private void onPlayClicked() {
         if (!serviceBound) return;
 
-        if (streamService.isConnected()) {
-            streamService.disconnect();
-        } else {
-            String ip = ipInput.getText().toString().trim();
-            String portStr = portInput.getText().toString().trim();
-
-            if (ip.isEmpty()) {
-                ipInput.setError("Enter server IP");
-                return;
-            }
-
-            int port;
-            try {
-                port = Integer.parseInt(portStr);
-            } catch (NumberFormatException e) {
-                portInput.setError("Invalid port");
-                return;
-            }
-
-            // Save for next time
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            prefs.edit()
-                    .putString("server_ip", ip)
-                    .putString("server_port", portStr)
-                    .apply();
-
-            statusText.setText("Connecting...");
-            connectBtn.setEnabled(false);
-            streamService.connect(ip, port);
+        // Check permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions();
+            return;
         }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int port = Integer.parseInt(prefs.getString("server_port", "8125"));
+
+        serverRunning = true;
+        streamService.startServer(port);
+
+        statusText.setText("Waiting for connection...");
+        ipText.setText(getLocalIpAddress());
+        infoText.setText("Port: " + port);
+        updateMenuState();
+    }
+
+    private void onStopClicked() {
+        if (!serviceBound) return;
+
+        serverRunning = false;
+        streamService.stopServer();
+
+        statusText.setText("Idle");
+        ipText.setText(getLocalIpAddress());
+        infoText.setText("VoiceMic");
+        latencyText.setText("");
+        audioLevelBar.setVisibility(View.GONE);
+        muteBtn.setVisibility(View.GONE);
+        updateMenuState();
     }
 
     private void onMuteClicked() {
@@ -255,46 +263,35 @@ public class MainActivity extends AppCompatActivity {
         boolean newMuted = !streamService.isMuted();
         streamService.setMuted(newMuted);
         muteBtn.setText(newMuted ? "Unmute" : "Mute");
-        muteBtn.setIconResource(newMuted ?
-                android.R.drawable.ic_lock_silent_mode :
-                android.R.drawable.ic_lock_silent_mode_off);
     }
+
+    // ── UI helpers ──
 
     private void updateUIState() {
         if (!serviceBound) return;
+        serverRunning = streamService.isServerRunning();
         boolean connected = streamService.isConnected();
-        connectBtn.setEnabled(true);
-        connectBtn.setText(connected ? "Disconnect" : "Connect");
-        ipInput.setEnabled(!connected);
-        portInput.setEnabled(!connected);
-        muteBtn.setEnabled(connected);
+
+        if (connected) {
+            statusText.setText("Connected");
+            audioLevelBar.setVisibility(View.VISIBLE);
+            muteBtn.setVisibility(View.VISIBLE);
+        } else if (serverRunning) {
+            statusText.setText("Waiting for connection...");
+            audioLevelBar.setVisibility(View.GONE);
+            muteBtn.setVisibility(View.GONE);
+        } else {
+            statusText.setText("Idle");
+            audioLevelBar.setVisibility(View.GONE);
+            muteBtn.setVisibility(View.GONE);
+        }
+        updateMenuState();
     }
 
-    private void tryAutoConnect() {
-        if (!serviceBound || streamService.isConnected()) return;
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean autoConnect = prefs.getBoolean("auto_connect", false);
-        if (!autoConnect) return;
-
-        String ip = prefs.getString("server_ip", "");
-        String portStr = prefs.getString("server_port", "8125");
-        if (ip.isEmpty()) return;
-
-        // Check permissions first
-        boolean hasAudioPerm = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        if (!hasAudioPerm) return;
-
-        int port;
-        try {
-            port = Integer.parseInt(portStr);
-        } catch (NumberFormatException e) {
-            return;
-        }
-
-        statusText.setText("Auto-connecting...");
-        connectBtn.setEnabled(false);
-        mainHandler.postDelayed(() -> streamService.connect(ip, port), 500);
+    private void updateMenuState() {
+        if (playMenuItem == null || stopMenuItem == null) return;
+        playMenuItem.setVisible(!serverRunning);
+        stopMenuItem.setVisible(serverRunning);
     }
 
     private void applyKeepScreenOn(boolean on) {
@@ -305,6 +302,37 @@ public class MainActivity extends AppCompatActivity {
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private String getLocalIpAddress() {
+        try {
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            WifiInfo wi = wm.getConnectionInfo();
+            int ipInt = wi.getIpAddress();
+            if (ipInt != 0) {
+                return String.format("%d.%d.%d.%d",
+                        (ipInt & 0xff), (ipInt >> 8 & 0xff),
+                        (ipInt >> 16 & 0xff), (ipInt >> 24 & 0xff));
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            java.util.Enumeration<java.net.NetworkInterface> nis =
+                    java.net.NetworkInterface.getNetworkInterfaces();
+            while (nis.hasMoreElements()) {
+                java.net.NetworkInterface ni = nis.nextElement();
+                java.util.Enumeration<java.net.InetAddress> addrs = ni.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    java.net.InetAddress addr = addrs.nextElement();
+                    if (!addr.isLoopbackAddress() && addr instanceof java.net.Inet4Address) {
+                        return addr.getHostAddress();
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        return "0.0.0.0";
     }
 
     private void requestPermissions() {

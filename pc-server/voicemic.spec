@@ -2,7 +2,6 @@
 # PyInstaller spec file for VoiceMic PC Server
 
 import sys
-from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
@@ -10,20 +9,22 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=collect_data_files('customtkinter') + [('lang', 'lang')],
+    datas=[],
     hiddenimports=[
-        'customtkinter',
+        'tkinter',
         'pyaudio',
         'numpy',
         'pystray',
         'PIL',
         'sounddevice',
         '_sounddevice_data',
-        'opuslib',
-        'noise_filter',
-        'opus_decoder',
         'audio_bridge',
-        'i18n',
+        'audio_player',
+        'server',
+        'protocol',
+        'config',
+        'tray_icon',
+        'gui',
     ],
     hookspath=[],
     hooksconfig={},

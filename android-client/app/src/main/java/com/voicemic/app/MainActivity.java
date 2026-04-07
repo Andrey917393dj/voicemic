@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -25,15 +27,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
-import com.google.android.material.button.MaterialButton;
-
 /**
  * Main activity — VoiceMic server interface.
- * Play/Stop in action bar, shows IP address, server mode.
+ * Toolbar with Play/Stop, centered mic icon, status text, IP:port display.
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -54,21 +55,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // UI
-    private ImageView statusIcon;
+    private ImageView micIcon;
     private TextView statusText;
     private TextView ipText;
-    private TextView latencyText;
-    private TextView infoText;
     private ProgressBar audioLevelBar;
-    private MaterialButton muteBtn;
+    private ImageView muteBtn;
     private MenuItem playMenuItem;
     private MenuItem stopMenuItem;
 
     private boolean serverRunning = false;
+    private boolean isMuted = false;
 
     // Service
     private AudioStreamService streamService;
     private boolean serviceBound = false;
+    private boolean pendingPlay = false;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -78,7 +79,13 @@ public class MainActivity extends AppCompatActivity {
             streamService = localBinder.getService();
             serviceBound = true;
             streamService.setStatusListener(statusListener);
-            updateUIState();
+
+            if (pendingPlay) {
+                pendingPlay = false;
+                doStartServer();
+            } else {
+                updateUIState();
+            }
         }
 
         @Override
@@ -91,16 +98,14 @@ public class MainActivity extends AppCompatActivity {
     private final AudioStreamService.StatusListener statusListener = new AudioStreamService.StatusListener() {
         @Override
         public void onStatusChanged(String status) {
-            mainHandler.post(() -> {
-                statusText.setText(status);
-            });
+            mainHandler.post(() -> statusText.setText(status));
         }
 
         @Override
         public void onConnected(String clientInfo) {
             mainHandler.post(() -> {
                 statusText.setText("Connected");
-                infoText.setText("Client connected");
+                micIcon.setColorFilter(Color.parseColor("#4CAF50"), PorterDuff.Mode.SRC_IN);
                 audioLevelBar.setVisibility(View.VISIBLE);
                 muteBtn.setVisibility(View.VISIBLE);
                 applyKeepScreenOn(true);
@@ -112,14 +117,15 @@ public class MainActivity extends AppCompatActivity {
             mainHandler.post(() -> {
                 if (serverRunning) {
                     statusText.setText("Waiting for connection...");
+                    micIcon.setColorFilter(Color.parseColor("#FF9800"), PorterDuff.Mode.SRC_IN);
                 } else {
                     statusText.setText("Idle");
+                    micIcon.setColorFilter(Color.parseColor("#808080"), PorterDuff.Mode.SRC_IN);
+                    ipText.setVisibility(View.GONE);
                 }
                 audioLevelBar.setVisibility(View.GONE);
                 audioLevelBar.setProgress(0);
                 muteBtn.setVisibility(View.GONE);
-                latencyText.setText("");
-                infoText.setText("VoiceMic");
                 applyKeepScreenOn(false);
             });
         }
@@ -127,14 +133,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onError(String error) {
             mainHandler.post(() -> {
-                statusText.setText("Error: " + error);
                 Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG).show();
+                statusText.setText("Error");
+                micIcon.setColorFilter(Color.parseColor("#F44336"), PorterDuff.Mode.SRC_IN);
             });
         }
 
         @Override
         public void onLatencyUpdate(long ms) {
-            mainHandler.post(() -> latencyText.setText(ms + " ms"));
+            // latency info not shown on main screen in original
         }
 
         @Override
@@ -148,39 +155,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("VoiceMic");
-        }
+        // Set Toolbar as ActionBar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         // Find views
-        statusIcon = findViewById(R.id.status_icon);
+        micIcon = findViewById(R.id.mic_icon);
         statusText = findViewById(R.id.status_text);
         ipText = findViewById(R.id.ip_text);
-        latencyText = findViewById(R.id.latency_text);
-        infoText = findViewById(R.id.info_text);
         audioLevelBar = findViewById(R.id.audio_level_bar);
         muteBtn = findViewById(R.id.mute_btn);
 
         // Mute button
         muteBtn.setOnClickListener(v -> onMuteClicked());
 
-        // Show device IP
-        ipText.setText(getLocalIpAddress());
-
-        // Request permissions
+        // Request permissions on start
         requestPermissions();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, AudioStreamService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent);
-        } else {
-            startService(intent);
-        }
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -192,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ── Menu with Play / Stop / Settings ──
+    // ── Menu ──
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -222,47 +212,79 @@ public class MainActivity extends AppCompatActivity {
     // ── Actions ──
 
     private void onPlayClicked() {
-        if (!serviceBound) return;
-
-        // Check permissions
+        // Check permissions first
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissions();
             return;
         }
 
+        // Start and bind to service
+        Intent intent = new Intent(this, AudioStreamService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+
+        if (serviceBound) {
+            doStartServer();
+        } else {
+            pendingPlay = true;
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
+    }
+
+    private void doStartServer() {
+        if (!serviceBound) return;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         int port = Integer.parseInt(prefs.getString("server_port", "8125"));
+        String transport = prefs.getString("transport", "wifi");
 
         serverRunning = true;
         streamService.startServer(port);
 
+        // Show IP:port like original
+        String ip = getLocalIpAddress();
+        String transportLabel = "Wi-Fi";
+        switch (transport) {
+            case "usb": transportLabel = "USB"; break;
+            case "bluetooth": transportLabel = "Bluetooth"; break;
+            case "wifi_direct": transportLabel = "Wi-Fi Direct"; break;
+        }
+
         statusText.setText("Waiting for connection...");
-        ipText.setText(getLocalIpAddress());
-        infoText.setText("Port: " + port);
+        ipText.setText(transportLabel + ": " + ip + ":" + port);
+        ipText.setVisibility(View.VISIBLE);
+        micIcon.setColorFilter(Color.parseColor("#FF9800"), PorterDuff.Mode.SRC_IN);
         updateMenuState();
     }
 
     private void onStopClicked() {
-        if (!serviceBound) return;
+        if (serviceBound) {
+            streamService.stopServer();
+        }
 
         serverRunning = false;
-        streamService.stopServer();
-
         statusText.setText("Idle");
-        ipText.setText(getLocalIpAddress());
-        infoText.setText("VoiceMic");
-        latencyText.setText("");
+        ipText.setVisibility(View.GONE);
+        micIcon.setColorFilter(Color.parseColor("#808080"), PorterDuff.Mode.SRC_IN);
         audioLevelBar.setVisibility(View.GONE);
         muteBtn.setVisibility(View.GONE);
         updateMenuState();
+        applyKeepScreenOn(false);
     }
 
     private void onMuteClicked() {
         if (!serviceBound) return;
-        boolean newMuted = !streamService.isMuted();
-        streamService.setMuted(newMuted);
-        muteBtn.setText(newMuted ? "Unmute" : "Mute");
+        isMuted = !isMuted;
+        streamService.setMuted(isMuted);
+        if (isMuted) {
+            muteBtn.setColorFilter(Color.parseColor("#F44336"), PorterDuff.Mode.SRC_IN);
+        } else {
+            muteBtn.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        }
     }
 
     // ── UI helpers ──
@@ -274,14 +296,18 @@ public class MainActivity extends AppCompatActivity {
 
         if (connected) {
             statusText.setText("Connected");
+            micIcon.setColorFilter(Color.parseColor("#4CAF50"), PorterDuff.Mode.SRC_IN);
             audioLevelBar.setVisibility(View.VISIBLE);
             muteBtn.setVisibility(View.VISIBLE);
+            ipText.setVisibility(View.VISIBLE);
         } else if (serverRunning) {
             statusText.setText("Waiting for connection...");
-            audioLevelBar.setVisibility(View.GONE);
-            muteBtn.setVisibility(View.GONE);
+            micIcon.setColorFilter(Color.parseColor("#FF9800"), PorterDuff.Mode.SRC_IN);
+            ipText.setVisibility(View.VISIBLE);
         } else {
             statusText.setText("Idle");
+            micIcon.setColorFilter(Color.parseColor("#808080"), PorterDuff.Mode.SRC_IN);
+            ipText.setVisibility(View.GONE);
             audioLevelBar.setVisibility(View.GONE);
             muteBtn.setVisibility(View.GONE);
         }

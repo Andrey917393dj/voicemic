@@ -4,98 +4,90 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="#303030">
 
-    <!-- Main content area -->
-    <LinearLayout
+    <!-- Toolbar (action bar) -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#424242"
+        app:titleTextColor="#FFFFFF"
+        app:title="VoiceMic"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Dark" />
+
+    <!-- Main content — centered -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="24dp">
+        android:layout_weight="1">
 
-        <!-- Status icon -->
-        <ImageView
-            android:id="@+id/status_icon"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:src="@android:drawable/ic_btn_speak_now"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="Status" />
-
-        <!-- Status text -->
-        <TextView
-            android:id="@+id/status_text"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Idle"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?android:textColorPrimary"
-            android:layout_marginBottom="8dp" />
+            android:layout_centerInParent="true"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-        <!-- IP Address display -->
-        <TextView
-            android:id="@+id/ip_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="16sp"
-            android:fontFamily="monospace"
-            android:textColor="?android:textColorSecondary"
-            android:layout_marginBottom="24dp" />
+            <!-- Large mic icon -->
+            <ImageView
+                android:id="@+id/mic_icon"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@android:drawable/ic_btn_speak_now"
+                android:layout_marginBottom="24dp"
+                android:contentDescription="Microphone"
+                android:tint="#808080" />
 
-        <!-- Audio level bar -->
-        <ProgressBar
-            android:id="@+id/audio_level_bar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="12dp"
-            android:max="100"
-            android:progress="0"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone" />
+            <!-- Status text: Idle / Waiting / Connected -->
+            <TextView
+                android:id="@+id/status_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Idle"
+                android:textSize="22sp"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="12dp" />
 
-        <!-- Mute button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/mute_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="Mute"
-            android:visibility="gone"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            app:cornerRadius="24dp" />
+            <!-- Transport + IP:port (shown when server running) -->
+            <TextView
+                android:id="@+id/ip_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="15sp"
+                android:fontFamily="monospace"
+                android:textColor="#AAAAAA"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp" />
 
-    </LinearLayout>
+            <!-- Audio level bar (shown when connected) -->
+            <ProgressBar
+                android:id="@+id/audio_level_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="200dp"
+                android:layout_height="8dp"
+                android:max="100"
+                android:progress="0"
+                android:visibility="gone"
+                android:progressTint="#4CAF50"
+                android:progressBackgroundTint="#555555"
+                android:layout_marginBottom="12dp" />
 
-    <!-- Bottom info bar -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical"
-        android:background="?attr/colorSurfaceVariant">
+            <!-- Mute button (shown when connected) -->
+            <ImageView
+                android:id="@+id/mute_btn"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_lock_silent_mode_off"
+                android:contentDescription="Mute"
+                android:visibility="gone"
+                android:padding="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:tint="#FFFFFF" />
 
-        <TextView
-            android:id="@+id/info_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="VoiceMic"
-            android:textSize="12sp"
-            android:textColor="?android:textColorSecondary" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/latency_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="12sp"
-            android:fontFamily="monospace"
-            android:textColor="?android:textColorSecondary" />
-
-    </LinearLayout>
+    </RelativeLayout>
 
 </LinearLayout>
